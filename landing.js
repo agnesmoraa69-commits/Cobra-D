@@ -9,11 +9,28 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   $('#go').textContent=mode==='signup'?'Create account':'Sign in';
   $('#err').textContent='';
 });
-$('#authForm').addEventListener('submit',e=>{
+$('#authForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const name=$('#name').value.trim(),email=$('#email').value.trim();
-  if(!name){$('#err').textContent='Enter your name.';return}
-  if(!/^\S+@\S+\.\S+$/.test(email)){$('#err').textContent='Enter a valid email address.';return}
-  try{localStorage.setItem('astrol-user',JSON.stringify({name,email}))}catch(x){}
-  location.href='home.html';
+  const name = $('#name').value.trim(), email = $('#email').value.trim();
+  const password = $('#password').value.trim(); // Make sure you have a password input in your HTML, or hardcode a default one for now
+  
+  if (!name) { $('#err').textContent = 'Enter your name.'; return; }
+  if (!/^\S+@\S+\.\S+$/.test(email)) { $('#err').textContent = 'Enter a valid email address.'; return; }
+
+  // Sign up with Supabase Auth
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password || 'defaultPassword123', // temporary default if you don't have a password field yet
+    options: {
+      data: { full_name: name }
+    }
+  });
+
+  if (error) {
+    $('#err').textContent = error.message;
+    return;
+  }
+
+  location.href = 'home.html';
 });
+
