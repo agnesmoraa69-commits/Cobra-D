@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Astrol Markets</title><link rel="stylesheet" href="app.css"></head>
+<body data-page="markets"><div class="page"><div id="head"></div><main>
+<h2>Markets</h2>
+<input class="search" id="q" placeholder="Search markets">
+<div class="chips"><button data-f="all" class="on">All</button><button data-f="1s">1 second</button><button data-f="fav">Favourites</button></div>
+<div id="list"></div></main><div id="nav"></div></div>
+<script src="core.js"></script>
+<script>
+let filter='all';
+function draw(){const q=$('#q').value.toLowerCase();
+ $('#list').innerHTML=MK.map((m,i)=>({m,i})).filter(({m,i})=>m.name.toLowerCase().includes(q)&&(filter==='all'||(filter==='1s'&&m.s1)||(filter==='fav'&&S.fav.includes(i))))
+ .map(({m,i})=>{const c=chg(m),u=c>=0;return `<div class="row" data-i="${i}"><span class="star ${S.fav.includes(i)?'on':''}" data-s="${i}">&#9733;</span>
+ <div class="info"><div class="nm"><span class="tag">${m.n}</span>${m.name}</div><div class="px">${fmt(m.price)}</div></div>
+ <div style="text-align:right"><svg class="sp" viewBox="0 0 70 36"><polyline points="${spark(m)}" stroke="${u?'#00a79e':'#cc2e3d'}"/></svg><div class="${u?'up':'dn'}">${u?'+':''}${c.toFixed(2)}%</div></div></div>`}).join('')||'<p class="muted">No markets match. Clear the search or change the filter.</p>'}
+$('#q').oninput=draw;
+$$('.chips button').forEach(b=>b.onclick=()=>{filter=b.dataset.f;$$('.chips button').forEach(x=>x.classList.toggle('on',x===b));draw()});
+$('#list').onclick=e=>{const s=e.target.closest('[data-s]');if(s){const i=+s.dataset.s;S.fav=S.fav.includes(i)?S.fav.filter(x=>x!==i):[...S.fav,i];save();draw();return}
+ const r=e.target.closest('.row');if(r)location.href='trade.html?m='+r.dataset.i};
+window.onTick=draw;window.init=draw;
+</script></body></html>
