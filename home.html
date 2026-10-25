@@ -155,29 +155,54 @@
   </section>
 
   <!-- EXCHANGE -->
-  <section class="view" id="exchange">
-    <header class="hero short">
-      <div class="bar"><button class="round"><svg class="ic"><use href="#i-search"/></svg></button>
-        <button class="pill ask"><svg class="ic"><use href="#i-spark"/></svg>Ask Nova</button>
-        <button class="round eye"><svg class="ic"><use href="#i-eye"/></svg></button>
-        <button class="round"><svg class="ic"><use href="#i-bell"/></svg><i class="badge">1</i></button></div>
-      <p class="muted">Estimated total value</p>
-      <div class="total"><b class="bal">0.00</b> USDT <button class="refresh">&#8635;</button></div>
-      <div class="actions two">
-        <div><button class="circle red open-deposit"><svg class="ic"><use href="#i-plus"/></svg></button>Add funds</div>
-        <div><button class="circle"><svg class="ic"><use href="#i-send"/></svg></button>Send</div>
+<section class="view" id="exchange">
+  <header class="hero short">
+    <div class="bar">
+      <button class="round" aria-label="Search"><svg class="ic"><use href="#i-search"/></svg></button>
+      <button class="pill ask"><svg class="ic"><use href="#i-spark"/></svg>Ask Nova</button>
+      <button class="round eye" aria-label="Hide balance"><svg class="ic"><use href="#i-eye"/></svg></button>
+      <button class="round" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg><i class="badge">1</i></button>
+    </div>
+    <p class="muted">Estimated total value</p>
+    <div class="total"><b class="bal">0.00</b> USDT <button class="refresh" aria-label="Refresh">&#8635;</button></div>
+    <div class="actions two">
+      <div><button class="circle red open-deposit" aria-label="Add funds"><svg class="ic"><use href="#i-plus"/></svg></button>Add funds</div>
+      <div><button class="circle" aria-label="Send"><svg class="ic"><use href="#i-send"/></svg></button>Send</div>
+    </div>
+  </header>
+
+  <main>
+    <h2>Buy &amp; sell crypto</h2>
+    <div class="ex-card">
+      <div class="ex-chips" id="exQuote"></div>
+      <button class="ex-pair">
+        <span class="ex-coin" style="background:#9aa0a6">L</span>
+        <span><b>LTC/ETH</b><small>0.02413 (1.77%) <span class="up">&#9650;</span></small></span>
+        <svg class="ic"><use href="#i-chev"/></svg>
+      </button>
+      <div class="ex-bal"><span class="ex-coin coin" style="background:#627eea">E</span><span id="exBalLbl">ETH Spot balance</span><span id="exBal">0.00000000</span></div>
+      <div class="ex-amt" id="exAmt">
+        <div><label for="exIn">Amount</label><input id="exIn" inputmode="decimal" placeholder="0.00000" value=""></div>
+        <button class="ex-cur" id="exCur">ETH &#8644;</button>
       </div>
-    </header>
-    <main>
-      <h2>Buy &amp; sell crypto</h2>
-      <div class="skel-card">
-        <div class="r"><i class="s w1"></i><i class="s w1"></i></div>
-        <div class="s big"></div><div class="s mid"></div>
-        <div class="r"><i class="s w2"></i><i class="s w2"></i><i class="s w2"></i><i class="s w2"></i></div>
-        <div class="s btn"></div>
-      </div>
-    </main>
-  </section>
+      <p class="ex-err" id="exErr"></p>
+      <div class="ex-pct"><button data-p="0.25">25%</button><button data-p="0.5">50%</button><button data-p="0.75">75%</button><button data-p="1">100%</button></div>
+      <button class="ex-buy">Buy</button>
+      <button class="ex-adv"><span><b>Advanced mode</b><small>Limit orders, order book, charts</small></span><i>&#10095;</i></button>
+    </div>
+
+    <div class="ex-promo">
+      <div><b><span class="tag">DXN</span>Trade bigger, hold longer</b><p>Open positions worth up to 50x your balance, long or short. Hold as long as you like - no expiry.</p></div>
+    </div>
+
+    <h2>Markets</h2>
+    <label class="ex-search"><svg class="ic"><use href="#i-search"/></svg><input id="exQ" placeholder="Search 38 pairs"></label>
+    <div class="ex-tabs" id="exTabs"></div>
+    <div class="ex-head"><span>Coin</span><span>24H chart</span><span>24H price</span></div>
+    <div id="exList"></div>
+    <button class="ex-more">View more &#8250;</button>
+  </main>
+</section>
 
   <!-- OPTIONS -->
   <section class="view" id="options">
