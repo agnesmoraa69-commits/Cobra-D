@@ -8,7 +8,7 @@ function renderBalance() {
   $$('.bal').forEach(e => e.textContent = v);
   $$('.bal-acc').forEach(e => {
     const t = e.dataset.type;
-    const share = t === 'cfd' ? 0 : state.balance[state.mode];
+    const share = t === 'options' ? state.balance[state.mode] : 0;
     e.textContent = state.hidden ? '****' : fmt(share);
   });
   $$('.toggle button').forEach(b => b.classList.toggle('on', b.dataset.mode === state.mode));
@@ -42,7 +42,6 @@ $$('.open-deposit').forEach(b => b.onclick = () => openSheet('deposit'));
 $$('.open-withdraw').forEach(b => b.onclick = () => openSheet('withdraw'));
 $$('.open-transfer').forEach(b => b.onclick = () => openSheet('transfer'));
 $('#tradeBtn').onclick = () => $('#markets').scrollIntoView({ behavior: 'smooth' });
-$$('.promo .x').forEach(b => b.onclick = () => { b.closest('.promo').remove(); if (!$('.promo')) $('#promos').remove(); });
 $('#cancel').onclick = () => $('#sheet').hidden = true;
 $('#sheet').onclick = e => { if (e.target.id === 'sheet') e.currentTarget.hidden = true; };
 
@@ -98,3 +97,46 @@ function tick() {
 
 buildMarkets(); tick(); renderBalance();
 setInterval(tick, 1000);
+
+/* Home page extras */
+let au = {}; try { au = JSON.parse(localStorage.getItem('astrol-user')) || {}; } catch (e) {}
+const uname = au.name || 'Astrol trader';
+const ini = uname.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+['#avatar', '#pav'].forEach(s => $(s).textContent = ini);
+$('#pname').textContent = uname;
+
+const slides = [['Make your first deposit', 'Deposit now', 'deposit'], ['Practise with demo funds', 'Start trading', 'options']];
+let si = 0;
+function setSlide(i) { si = i; $('#bt').textContent = slides[i][0]; $('#bc').textContent = slides[i][1]; $$('#banner .dots i').forEach((d, k) => d.classList.toggle('on', k === i)); }
+$('#bc').onclick = () => slides[si][2] === 'deposit' ? openSheet('deposit') : showTab('options');
+setInterval(() => setSlide((si + 1) % slides.length), 5000);
+
+$$('[data-go]').forEach(b => b.onclick = () => showTab(b.dataset.go));
+$$('[data-toast]').forEach(b => b.onclick = () => toast(b.dataset.toast));
+$('#addAcc').onclick = () => toast('Extra accounts are not available in the simulation');
+$('#avatar').onclick = () => showTab('profile');
+$('#bellBtn').onclick = () => showTab('notifs');
+$('.bell2').onclick = () => showTab('notifs');
+$$('.back').forEach(b => b.onclick = () => showTab('home'));
+$('#idpill').onclick = () => { try { navigator.clipboard.writeText('as01....7f2c'); } catch (e) {} toast('Account ID copied'); };
+$('#mobcard .x').onclick = () => $('#mobcard').remove();
+$('#closeAcc').onclick = () => { state.balance.demo = 10000; state.balance.real = 0; renderBalance(); toast('Demo account reset'); };
+$$('.eye').forEach(b => b.addEventListener('click', () => $$('.eye use').forEach(u => u.setAttribute('href', state.hidden ? '#i-eye-off' : '#i-eye'))));
+
+function buildDots() {
+  const n = $$('#promos .promo').length, box = $('#pdots');
+  if (!n) { $('#promos').remove(); box.remove(); return; }
+  box.innerHTML = '<i></i>'.repeat(n); markDot();
+}
+function markDot() {
+  const p = $('#promos'); if (!p) return;
+  const c = $$('#promos .promo'); if (!c.length) return;
+  const idx = Math.min(c.length - 1, Math.round(p.scrollLeft / (c[0].offsetWidth + 14)));
+  $$('#pdots i').forEach((d, k) => d.classList.toggle('on', k === idx));
+}
+$('#promos').addEventListener('scroll', markDot);
+$$('#promos .x').forEach(b => b.onclick = () => { b.closest('.promo').remove(); buildDots(); });
+buildDots();
+
+$('#hln').onclick = () => $('#hl').scrollBy({ left: 260, behavior: 'smooth' });
+$('#hlp').onclick = () => $('#hl').scrollBy({ left: -260, behavior: 'smooth' });
