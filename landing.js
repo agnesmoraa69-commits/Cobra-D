@@ -1,3 +1,11 @@
+// ---- Supabase setup ----
+const SUPABASE_URL = "https://bcfdxpkmusxprwbastcl.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_cKzbQZxpnEiK1-WbjC-LAg_HJJeUQog";
+
+const supabaseClient = window.supabase
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+// ---- end Supabase setup ----
 const $=(s)=>document.querySelector(s);
 $('.mobile-toggle').onclick=()=>$('.nav-links').classList.toggle('open');
 document.querySelectorAll('.nav-links a').forEach(a=>a.addEventListener('click',()=>$('.nav-links').classList.remove('open')));
