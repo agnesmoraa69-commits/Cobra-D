@@ -9,15 +9,25 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function renderBalance() {
-  const v = state.hidden ? '****' : fmt(state.balance[state.mode]);
+  const v = uiState.hidden ? '****' : fmt(S.bal[S.mode]);
   $$('.bal').forEach(e => e.textContent = v);
   $$('.bal-acc').forEach(e => {
     const t = e.dataset.type;
-    const share = t === 'options' ? state.balance[state.mode] : 0;
-    e.textContent = state.hidden ? '****' : fmt(share);
+    const share = t === 'options' ? S.bal[S.mode] : 0;
+    e.textContent = uiState.hidden ? '****' : fmt(share);
   });
-  $$('.toggle button').forEach(b => b.classList.toggle('on', b.dataset.mode === state.mode));
+  $$('.toggle button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
 }
+
+function openSheet(action) {
+  uiState.action = action;
+  $('#sheetTitle').textContent = action[0].toUpperCase() + action.slice(1);
+  $('#amount').value = '';
+  $('#sheet').hidden = false;
+  $('#amount').focus();
+}
+
+$('#confirm.onclick', removed, use this instead:)
 
 function showTab(name) {
   $$('.view').forEach(v => v.classList.toggle('active', v.id === name));
