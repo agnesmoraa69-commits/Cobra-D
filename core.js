@@ -1,3 +1,7 @@
+const SUPABASE_URL = 'https://rutjwvhdvxvqzsrehdkr.supabase.co';
+const SUPABASE_ANON_KEY = 'Sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const MK=[
  {name:'Volatility 100 (1s) Index',n:'100',s1:1,price:1036.67,vol:.0009},
  {name:'Volatility 25 Index',n:'25',price:2781.20,vol:.0005},
