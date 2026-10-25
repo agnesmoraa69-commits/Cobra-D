@@ -1,38 +1,32 @@
 const SUPABASE_URL = 'https://rutjwvhdvxvqzsrehdkr.supabase.co';
 const SUPABASE_ANON_KEY = 'Sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
 
-// Safely initialize supabase client globally
+// Safely initialize supabase client globally with retry/fallback
 let supabase;
 try {
   if (window.supabase && typeof window.supabase.createClient === 'function') {
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.supabase = supabase; // Expose globally for landing.js and script.js
+    window.supabase = supabase;
   }
 } catch (e) {
-  console.error("Supabase initialization error:", e);
+  console.error("Supabase direct init error:", e);
 }
 
-  // Fetch the profile row matching this user's ID
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', session.user.id)
-    .single();
-
-  if (error) {
-    console.error("Error fetching balances:", error.message);
-    return;
-  }
-
-  console.log("Real Balance:", profile.real_balance);
-  console.log("Demo Balance:", profile.demo_balance);
-  
-  // You can use these values to update your HTML elements later!
+// Fallback: If window.supabase.createClient wasn't ready yet, attach a helper loader
+if (!window.supabase || typeof window.supabase.auth?.signUp !== 'function') {
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      if (window.supabase && typeof window.supabase.createClient === 'function' && !supabase?.auth) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabase = supabase;
+      }
+    } catch (err) {
+      console.error("Delayed Supabase init error:", err);
+    }
+  });
 }
 
-// Run the function when the page loads
-fetchUserBalances();
-
+// Balance and market simulation utilities below
 const MK=[
  {name:'Volatility 100 (1s) Index',n:'100',s1:1,price:1036.67,vol:.0009},
  {name:'Volatility 25 Index',n:'25',price:2781.20,vol:.0005},
