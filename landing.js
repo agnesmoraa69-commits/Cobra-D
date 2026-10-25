@@ -9,8 +9,18 @@ const supabaseClient = window.supabase
 
 const $ = (s) => document.querySelector(s);
 
-$('.mobile-toggle').onclick = () => $('.nav-links').classList.toggle('open');
-document.querySelectorAll('.nav-links a').forEach(a => a.addEventListener('click', () => $('.nav-links').classList.remove('open')));
+// Safe check for mobile menu elements
+const mobileToggle = $('.mobile-toggle');
+if (mobileToggle) {
+  mobileToggle.onclick = () => $('.nav-links').classList.toggle('open');
+}
+
+document.querySelectorAll('.nav-links a').forEach(a => 
+  a.addEventListener('click', () => {
+    const navLinks = $('.nav-links');
+    if (navLinks) navLinks.classList.remove('open');
+  })
+);
 
 let mode = 'signup';
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
@@ -21,49 +31,59 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   $('#err').textContent = '';
 });
 
-$('#authForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const name = $('#name').value.trim();
-  const email = $('#email').value.trim();
-  const password = $('#password').value;
+const authForm = $('#authForm');
+if (authForm) {
+  authForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = $('#name').value.trim();
+    const email = $('#email').value.trim();
+    const password = $('#password').value;
 
-  if (mode === 'signup' && !name) { 
-    $('#err').textContent = 'Enter your name.'; 
-    return; 
-  }
-  if (!/^\S+@\S+\.\S+$/.test(email)) { 
-    $('#err').textContent = 'Enter a valid email address.'; 
-    return; 
-  }
-  if (!password || password.length < 6) { 
-    $('#err').textContent = 'Password must be at least 6 characters.'; 
-    return; 
-  }
-
-  try {
-    let result;
-    if (mode === 'signup') {
-      result = await supabaseClient.auth.signUp({
-        email: email,
-        password: password,
-        options: { data: { full_name: name } }
-      });
-    } else {
-      result = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+    if (mode === 'signup' && !name) { 
+      $('#err').textContent = 'Enter your name.'; 
+      return; 
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { 
+      $('#err').textContent = 'Enter a valid email address.'; 
+      return; 
+    }
+    if (!password || password.length < 6) { 
+      $('#err').textContent = 'Password must be at least 6 characters.'; 
+      return; 
     }
 
-    if (result.error) {
-      $('#err').textContent = result.error.message;
+    if (!supabaseClient) {
+      $('#err').textContent = 'Database connection error. Reload the page.';
+      alert('Supabase client is not initialized. Check your CDN script tags.');
       return;
     }
 
-    localStorage.setItem('astrol-user', JSON.stringify({ name: name || email, email }));
-    location.href = 'home.html';
-  } catch (err) {
-    $('#err').textContent = 'An unexpected error occurred.';
-    console.error(err);
-  }
-});
+    try {
+      let result;
+      if (mode === 'signup') {
+        result = await supabaseClient.auth.signUp({
+          email: email,
+          password: password,
+          options: { data: { full_name: name } }
+        });
+      } else {
+        result = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+      }
+
+      if (result.error) {
+        $('#err').textContent = result.error.message;
+        return;
+      }
+
+      localStorage.setItem('astrol-user', JSON.stringify({ name: name || email, email }));
+      window.location.href = 'home.html';
+    } catch (err) {
+      $('#err').textContent = 'An unexpected error occurred.';
+      alert('Error: ' + err.message);
+      console.error(err);
+    }
+  });
+}
