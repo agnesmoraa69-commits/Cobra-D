@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Astrol</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0112 0v6l2 2H4l2-2zM10 21h4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L3 10l7 3 3 7 8-17zM10 13l11-10"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M5 8h14l-4-4M19 16H5l4 4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 3v17h17M8 8v7M12 5v10M16 9v6"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9H4z"/></symbol>
+    <symbol id="i-opt" viewBox="0 0 24 24"><path d="M4 9h12l-3-3M20 15H8l3 3"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M16 13h3"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></symbol>
+  </defs>
+</svg>
+
+<div id="app">
+
+  <!-- HOME -->
+  <section class="view active" id="home">
+    <header class="hero">
+      <div class="bar">
+        <button class="round" aria-label="Profile">AS</button>
+        <button class="round" aria-label="Search"><svg class="ic"><use href="#i-search"/></svg></button>
+        <button class="pill ask"><svg class="ic"><use href="#i-spark"/></svg>Ask Nova</button>
+        <button class="round eye" aria-label="Hide balances"><svg class="ic"><use href="#i-eye"/></svg></button>
+        <button class="round bell" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg><i class="badge">1</i></button>
+      </div>
+      <div class="banner">
+        <h1>Make your first deposit</h1>
+        <div class="dots"><i class="on"></i><i></i></div>
+        <button class="cta open-deposit">Deposit now</button>
+        <svg class="candles" viewBox="0 0 120 100"><path d="M10 10v80h100" class="axis"/><rect x="35" y="35" width="14" height="30" rx="5"/><rect x="62" y="22" width="14" height="38" rx="5"/><rect x="89" y="40" width="14" height="28" rx="5"/></svg>
+      </div>
+    </header>
+    <main>
+      <div class="chips-row"><h3>Ways to deposit</h3><span class="chip">Mobile Money</span><span class="chip">Payment Agent</span><span class="chip">Card</span></div>
+      <h2>My trading accounts</h2>
+      <div class="scroll-x">
+        <div class="acc"><div class="logo red"><svg class="ic"><use href="#i-opt"/></svg></div><p>Options</p><b class="bal-acc" data-type="options">0.00</b> <small>USD</small></div>
+        <div class="acc"><div class="logo blue">CFD</div><p>CFDs | Standard</p><b class="bal-acc" data-type="cfd">0.00</b> <small>USD</small></div>
+      </div>
+      <div class="promos" id="promos">
+        <div class="promo p1"><button class="x" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button>
+          <h3>Astrol Exchange</h3><p>Practice buying and selling crypto with simulated funds.</p></div>
+        <div class="promo p2"><button class="x" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button>
+          <h3>Market insights</h3><p>Simulated analysis to practise reading the markets.</p></div>
+        <div class="promo p3"><button class="x" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button>
+          <h3>Try the demo account</h3><p>Start with 10,000.00 USD of practice funds.</p></div>
+      </div>
+    </main>
+  </section>
+
+  <!-- CFDs -->
+  <section class="view" id="cfds">
+    <header class="hero">
+      <div class="bar"><button class="round"><svg class="ic"><use href="#i-search"/></svg></button>
+        <div class="toggle"><button data-mode="real" class="on">Real</button><button data-mode="demo">Demo</button></div>
+        <button class="round eye"><svg class="ic"><use href="#i-eye"/></svg></button>
+        <button class="round"><svg class="ic"><use href="#i-bell"/></svg><i class="badge">1</i></button></div>
+      <p class="muted">Total trading value</p>
+      <div class="total"><b class="bal">0.00</b> USD <button class="refresh">&#8635;</button></div>
+      <p class="muted upd">Updated just now</p>
+      <div class="actions two">
+        <div><button class="circle red open-deposit"><svg class="ic"><use href="#i-plus"/></svg></button>Deposit</div>
+        <div><button class="circle go" data-go="options"><svg class="ic"><use href="#i-chart"/></svg></button>Trade</div>
+      </div>
+    </header>
+    <main>
+      <h2>My accounts</h2>
+      <div class="acc"><div class="logo blue">CFD</div><p>CFDs | Standard</p><b class="bal-acc" data-type="cfd">0.00</b> <small>USD</small></div>
+      <h2>Featured</h2>
+      <div class="feature"><span class="tag">$4315.13</span><span class="tag t2">$2623.84</span></div>
+    </main>
+  </section>
+
+  <!-- EXCHANGE -->
+  <section class="view" id="exchange">
+    <header class="hero short">
+      <div class="bar"><button class="round"><svg class="ic"><use href="#i-search"/></svg></button>
+        <button class="pill ask"><svg class="ic"><use href="#i-spark"/></svg>Ask Nova</button>
+        <button class="round eye"><svg class="ic"><use href="#i-eye"/></svg></button>
+        <button class="round"><svg class="ic"><use href="#i-bell"/></svg><i class="badge">1</i></button></div>
+      <p class="muted">Estimated total value</p>
+      <div class="total"><b class="bal">0.00</b> USDT <button class="refresh">&#8635;</button></div>
+      <div class="actions two">
+        <div><button class="circle red open-deposit"><svg class="ic"><use href="#i-plus"/></svg></button>Add funds</div>
+        <div><button class="circle"><svg class="ic"><use href="#i-send"/></svg></button>Send</div>
+      </div>
+    </header>
+    <main>
+      <h2>Buy &amp; sell crypto</h2>
+      <div class="skel-card">
+        <div class="r"><i class="s w1"></i><i class="s w1"></i></div>
+        <div class="s big"></div><div class="s mid"></div>
+        <div class="r"><i class="s w2"></i><i class="s w2"></i><i class="s w2"></i><i class="s w2"></i></div>
+        <div class="s btn"></div>
+      </div>
+    </main>
+  </section>
+
+  <!-- OPTIONS -->
+  <section class="view" id="options">
+    <header class="hero">
+      <div class="bar"><button class="round"><svg class="ic"><use href="#i-search"/></svg></button>
+        <div class="toggle"><button data-mode="real" class="on">Real</button><button data-mode="demo">Demo</button></div>
+        <button class="round eye"><svg class="ic"><use href="#i-eye"/></svg></button>
+        <button class="round"><svg class="ic"><use href="#i-bell"/></svg><i class="badge">1</i></button></div>
+      <p class="muted">Total trading value</p>
+      <div class="total"><b class="bal">0.00</b> USD <button class="refresh">&#8635;</button></div>
+      <p class="muted upd">Updated just now</p>
+      <div class="actions two">
+        <div><button class="circle red" id="tradeBtn"><svg class="ic"><use href="#i-chart"/></svg></button>Trade</div>
+        <div><button class="circle open-transfer"><svg class="ic"><use href="#i-swap"/></svg></button>Transfer</div>
+      </div>
+    </header>
+    <main>
+      <h2>Most traded markets</h2>
+      <div class="grid" id="markets"></div>
+    </main>
+  </section>
+
+  <!-- PORTFOLIO -->
+  <section class="view" id="portfolio">
+    <header class="hero">
+      <div class="bar"><button class="round"><svg class="ic"><use href="#i-search"/></svg></button>
+        <button class="pill ask"><svg class="ic"><use href="#i-spark"/></svg>Ask Nova</button>
+        <button class="round eye"><svg class="ic"><use href="#i-eye"/></svg></button>
+        <button class="round"><svg class="ic"><use href="#i-bell"/></svg><i class="badge">1</i></button></div>
+      <nav class="subtabs"><a class="on">Overview</a><a>Wallet</a><a>Partners</a><a>Trading</a><a>P2P</a></nav>
+      <p class="muted">Estimated total value</p>
+      <div class="total"><b class="bal">0.00</b> USD <button class="refresh">&#8635;</button></div>
+      <p class="muted upd">Updated 1 min ago</p>
+      <div class="actions three">
+        <div><button class="circle red open-deposit"><svg class="ic"><use href="#i-plus"/></svg></button>Deposit</div>
+        <div><button class="circle open-transfer"><svg class="ic"><use href="#i-swap"/></svg></button>Transfer</div>
+        <div><button class="circle open-withdraw"><svg class="ic"><use href="#i-minus"/></svg></button>Withdraw</div>
+      </div>
+    </header>
+    <main>
+      <h2>Make your first deposit</h2>
+      <p class="muted sub">Deposit in crypto or your local currency, instantly.</p>
+      <div class="scroll-x">
+        <div class="method">Mobile Money</div><div class="method">Payment Agent</div><div class="method">Mobile Pay</div>
+      </div>
+      <h2>Other payment methods</h2>
+      <div class="method wide open-deposit"><div class="dollar">$</div><div><b>USD</b><p class="muted">Fund via bank, card, e-wallet, and crypto.</p></div></div>
+    </main>
+  </section>
+
+  <nav id="tabs">
+    <button data-tab="home" class="on"><svg class="ic"><use href="#i-home"/></svg>Home</button>
+    <button data-tab="cfds"><svg class="ic"><use href="#i-chart"/></svg>CFDs</button>
+    <button data-tab="exchange"><span class="dxn">AXN</span>Exchange</button>
+    <button data-tab="options"><svg class="ic"><use href="#i-opt"/></svg>Options</button>
+    <button data-tab="portfolio"><svg class="ic"><use href="#i-wallet"/></svg>Portfolio</button>
+  </nav>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="panel">
+      <h3 id="sheetTitle">Deposit</h3>
+      <p class="muted">Simulation only. No real money moves.</p>
+      <input id="amount" type="number" min="1" placeholder="Amount in USD" inputmode="decimal">
+      <button class="cta full" id="confirm">Confirm</button>
+      <button class="link" id="cancel">Cancel</button>
+    </div>
+  </div>
+  <div id="toast" hidden></div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
