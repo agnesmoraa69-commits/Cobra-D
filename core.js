@@ -2,6 +2,36 @@ const SUPABASE_URL = 'https://rutjwvhdvxvqzsrehdkr.supabase.co';
 const SUPABASE_ANON_KEY = 'Sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function fetchUserBalances() {
+  // Get the currently logged-in user session
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    console.log("No user logged in yet.");
+    return;
+  }
+
+  // Fetch the profile row matching this user's ID
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching balances:", error.message);
+    return;
+  }
+
+  console.log("Real Balance:", profile.real_balance);
+  console.log("Demo Balance:", profile.demo_balance);
+  
+  // You can use these values to update your HTML elements later!
+}
+
+// Run the function when the page loads
+fetchUserBalances();
+
 const MK=[
  {name:'Volatility 100 (1s) Index',n:'100',s1:1,price:1036.67,vol:.0009},
  {name:'Volatility 25 Index',n:'25',price:2781.20,vol:.0005},
