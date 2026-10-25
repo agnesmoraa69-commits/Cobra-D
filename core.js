@@ -1,15 +1,16 @@
 const SUPABASE_URL = 'https://rutjwvhdvxvqzsrehdkr.supabase.co';
 const SUPABASE_ANON_KEY = 'Sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-async function fetchUserBalances() {
-  // Get the currently logged-in user session
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) {
-    console.log("No user logged in yet.");
-    return;
+// Safely initialize supabase client globally
+let supabase;
+try {
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabase = supabase; // Expose globally for landing.js and script.js
   }
+} catch (e) {
+  console.error("Supabase initialization error:", e);
+}
 
   // Fetch the profile row matching this user's ID
   const { data: profile, error } = await supabase
