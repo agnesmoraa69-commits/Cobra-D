@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Astrol Positions</title><link rel="stylesheet" href="app.css"></head>
+<body data-page="positions"><div class="page"><div id="head"></div><main>
+<h2>Positions</h2>
+<div class="stats"><div class="muted">Profit and loss<b id="pl"></b></div><div class="muted">Win rate<b id="wr"></b></div><div class="muted">Open<b id="oc"></b></div></div>
+<div class="chips"><button data-f="open" class="on">Open</button><button data-f="closed">Closed</button></div>
+<div id="list"></div>
+<button class="clear" id="clr">Clear closed history</button>
+</main><div id="nav"></div></div>
+<script src="core.js"></script>
+<script>
+let f='open';
+function draw(){const all=S.pos.filter(p=>p.mode===S.mode),cl=all.filter(p=>p.status!=='open'),op=all.filter(p=>p.status==='open');
+ const pl=cl.reduce((a,p)=>a+p.pnl,0),w=cl.filter(p=>p.status==='won').length;
+ $('#pl').textContent=(pl>=0?'+':'')+fmt(pl);$('#pl').className=pl>=0?'up':'dn';$('#wr').textContent=cl.length?Math.round(w/cl.length*100)+'%':'0%';$('#oc').textContent=op.length;
+ const l=f==='open'?op:cl;
+ $('#list').innerHTML=l.map(p=>{const m=MK[p.m],t=new Date(p.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const right=p.status==='open'?`<b>${fmt(p.stake)} USD</b><div class="muted">${Math.max(0,Math.ceil((p.end-Date.now())/1000))}s left</div>`:`<b class="${p.pnl>=0?'up':'dn'}">${p.pnl>=0?'+':''}${fmt(p.pnl)}</b><div class="muted">${p.status}</div>`;
+  return `<div class="pos"><div><b>${p.side}</b><div class="muted">${m.name}</div><div class="muted">Entry ${p.entry.toFixed(2)}${p.exit?' / Exit '+p.exit.toFixed(2):''} at ${t}</div></div><div class="r">${right}</div></div>`}).join('')||'<p class="muted">Nothing here yet. Place a contract on the Trade page.</p>'}
+$$('.chips button').forEach(b=>b.onclick=()=>{f=b.dataset.f;$$('.chips button').forEach(x=>x.classList.toggle('on',x===b));draw()});
+$('#clr').onclick=()=>{S.pos=S.pos.filter(p=>p.status==='open'||p.mode!==S.mode);save();draw();toast('History cleared')};
+window.onMode=draw;window.onTick=draw;window.init=draw;
+</script></body></html>
