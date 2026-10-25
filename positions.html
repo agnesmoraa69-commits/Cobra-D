@@ -6,6 +6,7 @@
 <div id="list"></div>
 <button class="clear" id="clr">Clear closed history</button>
 </main><div id="nav"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
 <script src="core.js"></script>
 <script>
 let f='open';
@@ -19,6 +20,4 @@ function draw(){const all=S.pos.filter(p=>p.mode===S.mode),cl=all.filter(p=>p.st
 $$('.chips button').forEach(b=>b.onclick=()=>{f=b.dataset.f;$$('.chips button').forEach(x=>x.classList.toggle('on',x===b));draw()});
 $('#clr').onclick=()=>{S.pos=S.pos.filter(p=>p.status==='open'||p.mode!==S.mode);save();draw();toast('History cleared')};
 window.onMode=draw;window.onTick=draw;window.init=draw;
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script>
 </script></body></html>
