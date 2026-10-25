@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Astrol Trade</title><link rel="stylesheet" href="app.css"></head>
+<body data-page="trade"><div class="page"><div id="head"></div><main>
+<div class="sel"><select id="mk"></select></div>
+<div class="lab" style="margin-bottom:8px"><span class="big" id="px"></span><span id="pc"></span></div>
+<div class="ctl"><button data-c="line" class="on">Line</button><button data-c="candle">Candles</button></div>
+<canvas id="cv" width="900" height="480"></canvas>
+<div class="box">
+ <div class="tabs"><button data-t="0" class="on">Rise/Fall</button><button data-t="1">Even/Odd</button><button data-t="2">Over/Under</button></div>
+ <div class="lab"><span>Stake (USD)</span></div>
+ <div class="step"><button id="m">-</button><input id="stake" type="number" min="1" value="10"><button id="p">+</button></div>
+ <div class="lab"><span>Duration</span><b id="dl">5 ticks</b></div>
+ <div class="step"><input id="dur" type="range" min="1" max="10" value="5"></div>
+ <div class="lab"><span class="muted">Payout</span><b id="pay"></b></div>
+ <div class="buy"><button class="a" id="b1"></button><button class="b" id="b2"></button></div>
+</div>
+<h2 style="margin-top:24px">Open contracts</h2><div id="open"></div>
+</main><div id="nav"></div></div>
+<script src="core.js"></script>
+<script>
+const PAIRS=[['Rise','Fall'],['Even','Odd'],['Over 4','Under 5']];
+let mi=0,tab=0,ctype='line';
+function init(){const u=+new URLSearchParams(location.search).get('m');if(u>=0&&u<MK.length)mi=u;
+ $('#mk').innerHTML=MK.map((m,i)=>`<option value="${i}">${m.name}</option>`).join('');$('#mk').value=mi;labels();onTick()}
+function labels(){const p=PAIRS[tab],s=+$('#stake').value||0;$('#pay').textContent=fmt(s*PAYOUT)+' USD';
+ $('#b1').innerHTML=p[0]+'<small>Win '+fmt(s*(PAYOUT-1))+'</small>';$('#b2').innerHTML=p[1]+'<small>Win '+fmt(s*(PAYOUT-1))+'</small>';$('#dl').textContent=$('#dur').value+' ticks'}
+function chart(){const cv=$('#cv'),c=cv.getContext('2d'),W=cv.width,H=cv.height,m=MK[mi];c.clearRect(0,0,W,H);
+ const h=ctype==='line'?m.hist.slice(-80):m.hist.slice(-80);
+ let lo=Math.min(...h),hi=Math.max(...h);const pad=(hi-lo)*.1||1;lo-=pad;hi+=pad;const y=v=>H-(v-lo)/(hi-lo)*H,x=i=>i/(h.length-1)*(W-70);
+ c.strokeStyle='#e6e6e6';c.lineWidth=1;for(let i=1;i<5;i++){c.beginPath();c.moveTo(0,H*i/5);c.lineTo(W,H*i/5);c.stroke()}
+ if(ctype==='line'){c.beginPath();h.forEach((v,i)=>i?c.lineTo(x(i),y(v)):c.moveTo(x(i),y(v)));c.strokeStyle='#181c25';c.lineWidth=3;c.stroke();
+  c.lineTo(x(h.length-1),H);c.lineTo(0,H);c.fillStyle='rgba(24,28,37,.07)';c.fill()}
+ else{const g=5,n=Math.floor(h.length/g);for(let k=0;k<n;k++){const s=h.slice(k*g,k*g+g),o=s[0],cl=s[s.length-1],hh=Math.max(...s),ll=Math.min(...s),cx=x(k*g+2),col=cl>=o?'#00a79e':'#cc2e3d';
+  c.strokeStyle=col;c.fillStyle=col;c.lineWidth=2;c.beginPath();c.moveTo(cx,y(hh));c.lineTo(cx,y(ll));c.stroke();c.fillRect(cx-9,Math.min(y(o),y(cl)),18,Math.max(3,Math.abs(y(o)-y(cl))))}}
+ S.pos.filter(p=>p.status==='open'&&p.m===mi&&typeof p.entry==='number').forEach(p=>{if(p.entry<lo||p.entry>hi)return;c.setLineDash([8,6]);c.strokeStyle='#ff444f';c.lineWidth=2;c.beginPath();c.moveTo(0,y(p.entry));c.lineTo(W,y(p.entry));c.stroke();c.setLineDash([])});
+ const py=y(m.price);c.fillStyle='#ff444f';c.fillRect(W-130,py-16,130,32);c.fillStyle='#fff';c.font='bold 20px sans-serif';c.fillText(m.price.toFixed(2),W-122,py+7)}
+function openList(){const o=S.pos.filter(p=>p.status==='open'&&p.mode===S.mode);
+ $('#open').innerHTML=o.map(p=>{const m=MK[p.m],left=Math.max(0,Math.ceil((p.end-Date.now())/1000));return `<div class="pos"><div><b>${p.side}</b><div class="muted">${m.name}</div><div class="muted">Entry ${p.entry.toFixed(2)}</div></div><div class="r"><b>${fmt(p.stake)} USD</b><div class="muted">${left}s left</div></div></div>`}).join('')||'<p class="muted">No open contracts. Pick a side to place one.</p>'}
+function onTick(){const m=MK[mi],c=chg(m);$('#px').textContent=fmt(m.price);$('#pc').className=c>=0?'up':'dn';$('#pc').textContent=(c>=0?'+':'')+c.toFixed(2)+'%';chart();openList()}
+function buy(side){const s=+$('#stake').value,d=+$('#dur').value;
+ if(!(s>=1))return toast('Stake must be at least 1 USD');if(s>S.bal[S.mode])return toast('Not enough balance. Add funds first.');
+ S.bal[S.mode]-=s;const m=MK[mi];S.pos.unshift({m:mi,mode:S.mode,side,stake:s,entry:m.price,end:Date.now()+d*1000,status:'open',time:Date.now()});save();renderBal();toast(side+' placed for '+d+' ticks');openList()}
+window.onMode=openList;
+$('#mk').onchange=e=>{mi=+e.target.value;onTick()};
+$$('.ctl button').forEach(b=>b.onclick=()=>{ctype=b.dataset.c;$$('.ctl button').forEach(x=>x.classList.toggle('on',x===b));chart()});
+$$('.tabs button').forEach(b=>b.onclick=()=>{tab=+b.dataset.t;$$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));labels()});
+$('#stake').oninput=labels;$('#dur').oninput=labels;
+$('#m').onclick=()=>{$('#stake').value=Math.max(1,(+$('#stake').value||1)-1);labels()};$('#p').onclick=()=>{$('#stake').value=(+$('#stake').value||0)+1;labels()};
+$('#b1').onclick=()=>buy(PAIRS[tab][0]);$('#b2').onclick=()=>buy(PAIRS[tab][1]);
+window.init=init;window.onTick=onTick;
+</script></body></html>
