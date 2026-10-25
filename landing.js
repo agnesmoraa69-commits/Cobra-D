@@ -1,53 +1,65 @@
-const $=(s)=>document.querySelector(s);
-$('.mobile-toggle').onclick=()=>$('.nav-links').classList.toggle('open');
-document.querySelectorAll('.nav-links a').forEach(a=>a.addEventListener('click',()=>$('.nav-links').classList.remove('open')));
-let mode='signup';
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
-  mode=b.dataset.mode;
-  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  $('#formTitle').textContent=mode==='signup'?'Create your practice account':'Welcome back';
-  $('#go').textContent=mode==='signup'?'Create account':'Sign in';
-  $('#err').textContent='';
+const $ = (s) => document.querySelector(s);
+
+$('.mobile-toggle').onclick = () => $('.nav-links').classList.toggle('open');
+document.querySelectorAll('.nav-links a').forEach(a => a.addEventListener('click', () => $('.nav-links').classList.remove('open')));
+
+let mode = 'signup';
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  const title = $('#formTitle');
+  if (title) title.textContent = mode === 'signup' ? 'Create your practice account' : 'Welcome back';
+  const goBtn = $('#go');
+  if (goBtn) goBtn.textContent = mode === 'signup' ? 'Create account' : 'Sign in';
+  const errEl = $('#err');
+  if (errEl) errEl.textContent = '';
 });
 
 $('#authForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const name = $('#name').value.trim();
-  const email = $('#email').value.trim();
   
-  if (!name) { $('#err').textContent = 'Enter your name.'; return; }
-  if (!/^\S+@\S+\.\S+$/.test(email)) { $('#err').textContent = 'Enter a valid email address.'; return; }
+  const name = $('#name') ? $('#name').value.trim() : 'Trader';
+  const email = $('#email') ? $('#email').value.trim() : '';
+  const errEl = $('#err');
 
-  // Generate a reliable default password since there's no password input on the form
+  const showError = (msg) => {
+    console.error('Auth Error:', msg);
+    if (errEl) errEl.textContent = msg;
+    else alert(msg);
+  };
+
+  if (!name) return showError('Enter your name.');
+  if (!/^\S+@\S+\.\S+$/.test(email)) return showError('Enter a valid email address.');
+
   const defaultPassword = 'CobraFXPassword123!';
 
-  if (mode === 'signup') {
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password: defaultPassword,
-      options: {
-        data: { full_name: name }
-      }
-    });
-
-    if (error) {
-      $('#err').textContent = error.message;
-      return;
-    }
-  } else {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: defaultPassword
-    });
-
-    if (error) {
-      $('#err').textContent = error.message;
-      return;
-    }
+  // Fallback check if supabase isn't loaded on index.html
+  if (typeof supabase === 'undefined') {
+    console.warn('Supabase JS SDK missing from index.html. Bypassing to home.html...');
+    try { localStorage.setItem('astrol-user', JSON.stringify({ name, email })); } catch (x) {}
+    location.href = 'home.html';
+    return;
   }
 
-  // Save user name locally for the avatar UI and head to home
-  try { localStorage.setItem('astrol-user', JSON.stringify({ name, email })); } catch (x) {}
-  location.href = 'home.html';
-});
+  try {
+    if (mode === 'signup') {
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: defaultPassword,
+        options: { data: { full_name: name } }
+      });
+      if (error) return showError(error.message);
+    } else {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: defaultPassword
+      });
+      if (error) return showError(error.message);
+    }
 
+    try { localStorage.setItem('astrol-user', JSON.stringify({ name, email })); } catch (x) {}
+    location.href = 'home.html';
+  } catch (err) {
+    showError(err.message || 'An unexpected error occurred.');
+  }
+});
