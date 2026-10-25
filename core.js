@@ -1,29 +1,21 @@
 const SUPABASE_URL = 'https://rutjwvhdvxvqzsrehdkr.supabase.co';
 const SUPABASE_ANON_KEY = 'Sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
 
-// Safely initialize supabase client globally
-let supabase;
+// Create the Supabase client once. The CDN script must load before this file.
+let sbClient = null;
 try {
   if (window.supabase && typeof window.supabase.createClient === 'function') {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.supabase = supabase; // Expose globally for landing.js and script.js
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.sb = sbClient;          // preferred name
+    window.supabase = sbClient;    // kept so other pages (script.js) keep working
+  } else if (window.supabase && window.supabase.auth) {
+    sbClient = window.supabase;    // already a client
+    window.sb = sbClient;
+  } else {
+    console.error('Supabase library not loaded. Check the CDN script tag comes before core.js.');
   }
 } catch (e) {
-  console.error("Supabase initialization error:", e);
-}
-
-// Fallback if window.supabase wasn't ready immediately
-if (!window.supabase || typeof window.supabase.auth?.signUp !== 'function') {
-  window.addEventListener('DOMContentLoaded', () => {
-    try {
-      if (window.supabase && typeof window.supabase.createClient === 'function' && !supabase?.auth) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        window.supabase = supabase;
-      }
-    } catch (err) {
-      console.error("Delayed Supabase init error:", err);
-    }
-  });
+  console.error('Supabase initialization error:', e);
 }
 
 // Market simulation and utility variables
@@ -53,7 +45,8 @@ function settle(){const now=Date.now();let ch=false;
   if(w)S.bal[p.mode]+=p.stake*PAYOUT;ch=true;toast((w?'Won ':'Lost ')+fmt(Math.abs(p.pnl))+' USD')});
  if(ch)save();return ch}
 function renderHead(){
- $('#head').innerHTML=`<div class="hrow"><a class="brand" href="index.html">ASTROL</a>
+ if(!$('#head'))return; // landing page has no platform header
+ $('#head').innerHTML=`<div class="hrow"><a class="brand" href="index.html">COBRA</a>
  <div class="toggle"><button data-m="real">Real</button><button data-m="demo">Demo</button></div></div>
  <div class="bl">Total trading value</div>
  <div class="bv"><span id="bv"></span> <small>USD</small><button class="fund" id="fund">+ Add</button></div>`;
@@ -61,7 +54,9 @@ function renderHead(){
  $('#fund').onclick=()=>{if(S.mode==='demo'){S.bal.demo+=10000;save();renderBal();toast('Added 10,000.00 demo funds')}else toast('Real deposits are not available in the simulation')};
  $$('.toggle button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));renderBal()}
 function renderBal(){const e=$('#bv');if(e)e.textContent=fmt(S.bal[S.mode])}
-function renderNav(page){$('#nav').innerHTML=[['index.html','Home','home'],['markets.html','Markets','markets'],['trade.html','Trade','trade'],['positions.html','Positions','positions']]
+function renderNav(page){
+ if(!$('#nav'))return; // landing page has no bottom nav
+ $('#nav').innerHTML=[['index.html','Home','home'],['markets.html','Markets','markets'],['trade.html','Trade','trade'],['positions.html','Positions','positions']]
  .map(l=>`<a href="${l[0]}" class="${l[2]===page?'on':''}">${l[1]}</a>`).join('')}
 function spark(m){const h=m.hist.slice(-30),lo=Math.min(...h),hi=Math.max(...h),r=hi-lo||1;
  return h.map((p,k)=>`${k/29*70},${34-(p-lo)/r*32}`).join(' ')}
