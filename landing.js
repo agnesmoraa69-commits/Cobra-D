@@ -31,26 +31,25 @@ $('#authForm').addEventListener('submit', async e => {
   if (!name) return showError('Enter your name.');
   if (!/^\S+@\S+\.\S+$/.test(email)) return showError('Enter a valid email address.');
 
-  const defaultPassword = 'CobraFXPassword123!';
+  const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
 
-  // Fallback check if supabase isn't loaded on index.html
-  if (typeof supabase === 'undefined') {
-    console.warn('Supabase JS SDK missing from index.html. Bypassing to home.html...');
-    try { localStorage.setItem('astrol-user', JSON.stringify({ name, email })); } catch (x) {}
-    location.href = 'home.html';
+  if (!client || !client.auth) {
+    showError('Supabase is still connecting. Please wait a second and try again.');
     return;
   }
 
+  const defaultPassword = 'CobraFXPassword123!';
+
   try {
     if (mode === 'signup') {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await client.auth.signUp({
         email: email,
         password: defaultPassword,
         options: { data: { full_name: name } }
       });
       if (error) return showError(error.message);
     } else {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await client.auth.signInWithPassword({
         email: email,
         password: defaultPassword
       });
