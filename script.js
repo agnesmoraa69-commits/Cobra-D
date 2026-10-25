@@ -1,3 +1,11 @@
+// ---- Supabase setup ----
+const SUPABASE_URL = "https://bcfdxpkmusxprwbastcl.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_cKzbQZxpnEiK1-WbjC-LAg_HJJeUQog";
+
+const supabaseClient = window.supabase
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+// ---- end Supabase setup ----
 const state = { mode: 'real', hidden: false, balance: { real: 0, demo: 10000 }, action: 'deposit' };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
