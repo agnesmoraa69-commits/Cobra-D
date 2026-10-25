@@ -17,4 +17,6 @@ $$('.chips button').forEach(b=>b.onclick=()=>{filter=b.dataset.f;$$('.chips butt
 $('#list').onclick=e=>{const s=e.target.closest('[data-s]');if(s){const i=+s.dataset.s;S.fav=S.fav.includes(i)?S.fav.filter(x=>x!==i):[...S.fav,i];save();draw();return}
  const r=e.target.closest('.row');if(r)location.href='trade.html?m='+r.dataset.i};
 window.onTick=draw;window.init=draw;
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
 </script></body></html>
