@@ -47,4 +47,6 @@ $('#stake').oninput=labels;$('#dur').oninput=labels;
 $('#m').onclick=()=>{$('#stake').value=Math.max(1,(+$('#stake').value||1)-1);labels()};$('#p').onclick=()=>{$('#stake').value=(+$('#stake').value||0)+1;labels()};
 $('#b1').onclick=()=>buy(PAIRS[tab][0]);$('#b2').onclick=()=>buy(PAIRS[tab][1]);
 window.init=init;window.onTick=onTick;
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
 </script></body></html>
