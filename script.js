@@ -19,16 +19,6 @@ function renderBalance() {
   $$('.toggle button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
 }
 
-function openSheet(action) {
-  uiState.action = action;
-  $('#sheetTitle').textContent = action[0].toUpperCase() + action.slice(1);
-  $('#amount').value = '';
-  $('#sheet').hidden = false;
-  $('#amount').focus();
-}
-
-$('#confirm.onclick', removed, use this instead:)
-
 function showTab(name) {
   $$('.view').forEach(v => v.classList.toggle('active', v.id === name));
   $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
@@ -36,55 +26,76 @@ function showTab(name) {
 }
 
 function toast(msg) {
-  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  const t = $('#toast'); if (!t) return;
+  t.textContent = msg; t.hidden = false;
   clearTimeout(toast.id); toast.id = setTimeout(() => t.hidden = true, 2200);
 }
 
 function openSheet(action) {
-  state.action = action;
-  $('#sheetTitle').textContent = action[0].toUpperCase() + action.slice(1);
-  $('#amount').value = '';
-  $('#sheet').hidden = false;
-  $('#amount').focus();
+  uiState.action = action;
+  const title = $('#sheetTitle');
+  if (title) title.textContent = action[0].toUpperCase() + action.slice(1);
+  const amt = $('#amount');
+  if (amt) { amt.value = ''; amt.focus(); }
+  const sheet = $('#sheet');
+  if (sheet) sheet.hidden = false;
 }
 
 $$('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 $$('[data-go]').forEach(b => b.onclick = () => showTab(b.dataset.go));
-$$('.toggle button').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; renderBalance(); });
-$$('.eye').forEach(b => b.onclick = () => { state.hidden = !state.hidden; renderBalance(); });
+$$('.toggle button').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; save(); renderBalance(); });
+$$('.eye').forEach(b => b.onclick = () => { uiState.hidden = !uiState.hidden; renderBalance(); });
 $$('.refresh').forEach(b => b.onclick = () => { renderBalance(); toast('Balance updated'); });
 $$('.open-deposit').forEach(b => b.onclick = () => openSheet('deposit'));
 $$('.open-withdraw').forEach(b => b.onclick = () => openSheet('withdraw'));
 $$('.open-transfer').forEach(b => b.onclick = () => openSheet('transfer'));
-$('#tradeBtn').onclick = () => $('#markets').scrollIntoView({ behavior: 'smooth' });
-$('#cancel').onclick = () => $('#sheet').hidden = true;
-$('#sheet').onclick = e => { if (e.target.id === 'sheet') e.currentTarget.hidden = true; };
 
-$('#confirm').onclick = () => {
-  const amt = parseFloat($('#amount').value);
-  if (!amt || amt <= 0) return toast('Enter an amount above 0');
-  const cur = state.balance[state.mode];
-  if (state.action === 'deposit') state.balance[state.mode] += amt;
-  else if (amt > cur) return toast('Amount is higher than your balance');
-  else if (state.action === 'withdraw') state.balance[state.mode] -= amt;
-  $('#sheet').hidden = true;
-  renderBalance();
-  toast(state.action[0].toUpperCase() + state.action.slice(1) + ' complete');
-};
+if ($('#tradeBtn')) $('#tradeBtn').onclick = () => $('#markets').scrollIntoView({ behavior: 'smooth' });
+if ($('#cancel')) $('#cancel').onclick = () => $('#sheet').hidden = true;
+if ($('#sheet')) $('#sheet').onclick = e => { if (e.target.id === 'sheet') e.currentTarget.hidden = true; };
 
-/* Simulated markets */
-const markets = [
-  { name: 'Volatility 100 (1s) Index', n: '100', s1: true, price: 1036.67, vol: 0.0009 },
-  { name: 'Volatility 25 Index', n: '25', price: 2781.20, vol: 0.0005 },
-  { name: 'Volatility 10 (1s) Index', n: '10', s1: true, price: 9380.47, vol: 0.0003 },
-  { name: 'Volatility 25 (1s) Index', n: '25', s1: true, price: 912238.10, vol: 0.0005 },
-  { name: 'Volatility 50 Index', n: '50', price: 245.88, vol: 0.0007 },
-  { name: 'Volatility 75 (1s) Index', n: '75', s1: true, price: 4510.32, vol: 0.0008 }
-];
-markets.forEach(m => { m.hist = Array.from({ length: 30 }, () => m.price); });
+if ($('#confirm')) {
+  $('#confirm').onclick = async () => {
+    const amtInput = $('#amount');
+    const amt = parseFloat(amtInput ? amtInput.value : 0);
+    if (!amt || amt <= 0) return toast('Enter an amount above 0');
+    const cur = S.bal[S.mode];
 
+    if (uiState.action === 'deposit') {
+      S.bal[S.mode] += amt;
+    } else if (uiState.action === 'withdraw') {
+      if (amt > cur) return toast('Amount is higher than your balance');
+      S.bal[S.mode] -= amt;
+    }
+
+    if (typeof save === 'function') save();
+
+    // Update database in Supabase
+    if (typeof supabase !== 'undefined') {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const updateData = S.mode === 'real' 
+          ? { real_balance: S.bal.real } 
+          : { demo_balance: S.bal.demo };
+
+        await supabase
+          .from('profiles')
+          .update(updateData)
+          .eq('id', session.user.id);
+      }
+    }
+
+    if ($('#sheet')) $('#sheet').hidden = true;
+    renderBalance();
+    toast(uiState.action[0].toUpperCase() + uiState.action.slice(1) + ' complete');
+  };
+}
+
+/* Simulated markets - sync with core.js MK array */
 function buildMarkets() {
-  $('#markets').innerHTML = markets.map((m, i) => `
+  const el = $('#markets');
+  if (!el || typeof MK === 'undefined') return;
+  el.innerHTML = MK.map((m, i) => `
     <div class="mk" data-i="${i}">
       <div class="ico"><span class="num">${m.n}</span>${m.s1 ? '<span class="s1">1s</span>' : ''}</div>
       <div class="nm">${m.name}</div>
@@ -94,53 +105,76 @@ function buildMarkets() {
 }
 
 function tick() {
-  markets.forEach((m, i) => {
-    m.price *= 1 + (Math.random() - 0.5) * 2 * m.vol;
-    m.hist.push(m.price); m.hist.shift();
+  if (typeof MK === 'undefined') return;
+  MK.forEach((m, i) => {
     const card = $(`.mk[data-i="${i}"]`);
     if (!card) return;
     const lo = Math.min(...m.hist), hi = Math.max(...m.hist), rng = hi - lo || 1;
-    const pts = m.hist.map((p, k) => `${(k / 29) * 70},${38 - ((p - lo) / rng) * 36}`).join(' ');
-    const chg = (m.price / m.hist[0] - 1) * 100;
-    const cls = chg >= 0 ? 'up' : 'dn';
-    $('.px', card).textContent = fmt(m.price);
-    const pl = $('polyline', card); pl.setAttribute('points', pts); pl.style.stroke = chg >= 0 ? '#00a79e' : '#cc2e3d';
-    const pc = $('.pc', card); pc.className = 'pc ' + cls;
-    pc.innerHTML = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}% <span class="muted">(5m)</span>`;
+    const pts = m.hist.map((p, k) => `${(k / (m.hist.length - 1)) * 70},${38 - ((p - lo) / rng) * 36}`).join(' ');
+    const chgVal = chg(m);
+    const cls = chgVal >= 0 ? 'up' : 'dn';
+    const px = $('.px', card);
+    if (px) px.textContent = fmt(m.price);
+    const pl = $('polyline', card);
+    if (pl) { pl.setAttribute('points', pts); pl.style.stroke = chgVal >= 0 ? '#00a79e' : '#cc2e3d'; }
+    const pc = $('.pc', card);
+    if (pc) {
+      pc.className = 'pc ' + cls;
+      pc.innerHTML = `${chgVal >= 0 ? '+' : ''}${chgVal.toFixed(2)}% <span class="muted">(5m)</span>`;
+    }
   });
 }
 
-buildMarkets(); tick(); renderBalance();
-setInterval(tick, 1000);
+buildMarkets();
+renderBalance();
+window.onTick = tick; // Connect ticker update hook from core.js
 
 /* Home page extras */
 let au = {}; try { au = JSON.parse(localStorage.getItem('astrol-user')) || {}; } catch (e) {}
 const uname = au.name || 'Astrol trader';
 const ini = uname.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-['#avatar', '#pav'].forEach(s => $(s).textContent = ini);
-$('#pname').textContent = uname;
+['#avatar', '#pav'].forEach(s => { const el = $(s); if (el) el.textContent = ini; });
+if ($('#pname')) $('#pname').textContent = uname;
 
 const slides = [['Make your first deposit', 'Deposit now', 'deposit'], ['Practise with demo funds', 'Start trading', 'options']];
 let si = 0;
-function setSlide(i) { si = i; $('#bt').textContent = slides[i][0]; $('#bc').textContent = slides[i][1]; $$('#banner .dots i').forEach((d, k) => d.classList.toggle('on', k === i)); }
-$('#bc').onclick = () => slides[si][2] === 'deposit' ? openSheet('deposit') : showTab('options');
+function setSlide(i) {
+  si = i;
+  if ($('#bt')) $('#bt').textContent = slides[i][0];
+  if ($('#bc')) $('#bc').textContent = slides[i][1];
+  $$('#banner .dots i').forEach((d, k) => d.classList.toggle('on', k === i));
+}
+if ($('#bc')) $('#bc').onclick = () => slides[si][2] === 'deposit' ? openSheet('deposit') : showTab('options');
 setInterval(() => setSlide((si + 1) % slides.length), 5000);
 
-$$('[data-go]').forEach(b => b.onclick = () => showTab(b.dataset.go));
 $$('[data-toast]').forEach(b => b.onclick = () => toast(b.dataset.toast));
-$('#addAcc').onclick = () => toast('Extra accounts are not available in the simulation');
-$('#avatar').onclick = () => showTab('profile');
-$('#bellBtn').onclick = () => showTab('notifs');
-$('.bell2').onclick = () => showTab('notifs');
+if ($('#addAcc')) $('#addAcc').onclick = () => toast('Extra accounts are not available in the simulation');
+if ($('#avatar')) $('#avatar').onclick = () => showTab('profile');
+if ($('#bellBtn')) $('#bellBtn').onclick = () => showTab('notifs');
+if ($('.bell2')) $('.bell2').onclick = () => showTab('notifs');
 $$('.back').forEach(b => b.onclick = () => showTab('home'));
-$('#idpill').onclick = () => { try { navigator.clipboard.writeText('as01....7f2c'); } catch (e) {} toast('Account ID copied'); };
-$('#mobcard .x').onclick = () => $('#mobcard').remove();
-$('#closeAcc').onclick = () => { state.balance.demo = 10000; state.balance.real = 0; renderBalance(); toast('Demo account reset'); };
-$$('.eye').forEach(b => b.addEventListener('click', () => $$('.eye use').forEach(u => u.setAttribute('href', state.hidden ? '#i-eye-off' : '#i-eye'))));
+if ($('#idpill')) $('#idpill').onclick = () => { try { navigator.clipboard.writeText('as01....7f2c'); } catch (e) {} toast('Account ID copied'); };
+if ($('#mobcard .x')) $('#mobcard .x').onclick = () => $('#mobcard').remove();
+if ($('#closeAcc')) $('#closeAcc').onclick = async () => {
+  S.bal.demo = 10000;
+  S.bal.real = 0;
+  if (typeof save === 'function') save();
+  renderBalance();
+  
+  if (typeof supabase !== 'undefined') {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase.from('profiles').update({ real_balance: 0, demo_balance: 10000 }).eq('id', session.user.id);
+    }
+  }
+  toast('Demo account reset');
+};
+$$('.eye').forEach(b => b.addEventListener('click', () => $$('.eye use').forEach(u => u.setAttribute('href', uiState.hidden ? '#i-eye-off' : '#i-eye'))));
 
 function buildDots() {
   const n = $$('#promos .promo').length, box = $('#pdots');
-  if (!n) { $('#promos').remove(); box.remove(); return; }
+  if (!box) return;
+  if (!n) { if ($('#promos')) $('#promos').remove(); box.remove(); return; }
   box.innerHTML = '<i></i>'.repeat(n); markDot();
 }
 function markDot() {
@@ -149,34 +183,39 @@ function markDot() {
   const idx = Math.min(c.length - 1, Math.round(p.scrollLeft / (c[0].offsetWidth + 14)));
   $$('#pdots i').forEach((d, k) => d.classList.toggle('on', k === idx));
 }
-$('#promos').addEventListener('scroll', markDot);
+if ($('#promos')) $('#promos').addEventListener('scroll', markDot);
 $$('#promos .x').forEach(b => b.onclick = () => { b.closest('.promo').remove(); buildDots(); });
 buildDots();
 
-$('#hln').onclick = () => $('#hl').scrollBy({ left: 260, behavior: 'smooth' });
-$('#hlp').onclick = () => $('#hl').scrollBy({ left: -260, behavior: 'smooth' });
-/* ===== EXCHANGE PAGE (add at the very bottom of script.js) ===== */
+if ($('#hln')) $('#hln').onclick = () => $('#hl').scrollBy({ left: 260, behavior: 'smooth' });
+if ($('#hlp')) $('#hlp').onclick = () => $('#hl').scrollBy({ left: -260, behavior: 'smooth' });
+
+/* ===== EXCHANGE PAGE ===== */
 (function () {
   const root = document.getElementById('exchange');
+  if (!root) return;
   const x = s => root.querySelector(s);
   let quote = 'ETH', filter = 'Trending';
   const balance = 0; // exchange spot balance
 
   /* quote currency chips */
   const qBox = x('#exQuote');
-  qBox.innerHTML = ['ETH', 'BTC', 'USDC', 'USDT'].map(c => `<button class="ex-chip ${c === quote ? 'on' : ''}">${c}</button>`).join('');
-  qBox.onclick = e => {
-    if (!e.target.classList.contains('ex-chip')) return;
-    quote = e.target.textContent;
-    qBox.querySelectorAll('.ex-chip').forEach(b => b.classList.toggle('on', b === e.target));
-    x('#exBalLbl').textContent = quote + ' Spot balance';
-    x('#exCur').innerHTML = quote + ' &#8644;';
-    validate();
-  };
+  if (qBox) {
+    qBox.innerHTML = ['ETH', 'BTC', 'USDC', 'USDT'].map(c => `<button class="ex-chip ${c === quote ? 'on' : ''}">${c}</button>`).join('');
+    qBox.onclick = e => {
+      if (!e.target.classList.contains('ex-chip')) return;
+      quote = e.target.textContent;
+      qBox.querySelectorAll('.ex-chip').forEach(b => b.classList.toggle('on', b === e.target));
+      if (x('#exBalLbl')) x('#exBalLbl').textContent = quote + ' Spot balance';
+      if (x('#exCur')) x('#exCur').innerHTML = quote + ' &#8644;';
+      validate();
+    };
+  }
 
   /* amount, percent chips, error message */
   const inp = x('#exIn'), box = x('#exAmt'), err = x('#exErr');
   function validate() {
+    if (!inp || !box || !err) return;
     const v = parseFloat(inp.value) || 0;
     const bad = balance <= 0 || v > balance;
     box.classList.toggle('err', bad);
@@ -184,20 +223,23 @@ $('#hlp').onclick = () => $('#hl').scrollBy({ left: -260, behavior: 'smooth' });
       ? `No funds available in ${quote} Spot. <a href="#">Add funds</a>`
       : v > balance ? 'Amount exceeds your balance.' : '';
   }
-  inp.oninput = validate;
-  err.onclick = e => { if (e.target.tagName === 'A') { e.preventDefault(); openSheet('deposit'); } };
+  if (inp) inp.oninput = validate;
+  if (err) err.onclick = e => { if (e.target.tagName === 'A') { e.preventDefault(); openSheet('deposit'); } };
   root.querySelectorAll('.ex-pct button').forEach(b => b.onclick = () => {
-    inp.value = (balance * parseFloat(b.dataset.p)).toFixed(5);
+    if (inp) inp.value = (balance * parseFloat(b.dataset.p)).toFixed(5);
     validate();
   });
-  x('.ex-buy').onclick = () => {
-    const v = parseFloat(inp.value) || 0;
-    if (balance <= 0) return toast('No funds available in ' + quote + ' Spot');
-    if (v <= 0) return toast('Enter an amount');
-    if (v > balance) return toast('Amount exceeds your balance');
-    toast('Order placed (simulation)');
-  };
+  if (x('.ex-buy')) {
+    x('.ex-buy').onclick = () => {
+      const v = parseFloat(inp.value) || 0;
+      if (balance <= 0) return toast('No funds available in ' + quote + ' Spot');
+      if (v <= 0) return toast('Enter an amount');
+      if (v > balance) return toast('Amount exceeds your balance');
+      toast('Order placed (simulation)');
+    };
+  }
   [x('.ex-pair'), x('.ex-adv'), x('.ex-more'), x('#exCur'), x('.actions .circle:not(.red)')]
+    .filter(Boolean)
     .forEach(b => b.addEventListener('click', () => toast('Not available in the simulation')));
   validate();
 
@@ -218,7 +260,9 @@ $('#hlp').onclick = () => $('#hl').scrollBy({ left: -260, behavior: 'smooth' });
     return `<svg viewBox="0 0 80 30"><polyline points="${pts.join(' ')}" fill="none" stroke="${up ? '#00a79e' : '#cc2e3d'}" stroke-width="1.5"/></svg>`;
   }
   function render() {
-    const term = x('#exQ').value.trim().toLowerCase();
+    const qEl = x('#exQ');
+    if (!qEl || !x('#exList')) return;
+    const term = qEl.value.trim().toLowerCase();
     let rows = data.filter(r => r[0].toLowerCase().includes(term));
     if (filter === 'Gainers') rows = rows.filter(r => r[3] > 0);
     if (filter === 'Losers') rows = rows.filter(r => r[3] < 0);
@@ -230,13 +274,15 @@ $('#hlp').onclick = () => $('#hl').scrollBy({ left: -260, behavior: 'smooth' });
       </div>`).join('') || '<p class="muted" style="text-align:center;padding:24px 0">No pairs found</p>';
   }
   const tabs = x('#exTabs');
-  tabs.innerHTML = ['Trending', 'Gainers', 'Losers'].map(t => `<button class="ex-chip ${t === filter ? 'on' : ''}">${t}</button>`).join('');
-  tabs.onclick = e => {
-    if (!e.target.classList.contains('ex-chip')) return;
-    filter = e.target.textContent;
-    tabs.querySelectorAll('.ex-chip').forEach(b => b.classList.toggle('on', b === e.target));
-    render();
-  };
-  x('#exQ').oninput = render;
+  if (tabs) {
+    tabs.innerHTML = ['Trending', 'Gainers', 'Losers'].map(t => `<button class="ex-chip ${t === filter ? 'on' : ''}">${t}</button>`).join('');
+    tabs.onclick = e => {
+      if (!e.target.classList.contains('ex-chip')) return;
+      filter = e.target.textContent;
+      tabs.querySelectorAll('.ex-chip').forEach(b => b.classList.toggle('on', b === e.target));
+      render();
+    };
+  }
+  if (x('#exQ')) x('#exQ').oninput = render;
   render();
 })();
