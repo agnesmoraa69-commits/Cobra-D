@@ -32,47 +32,43 @@ $('#authForm').addEventListener('submit', async e => {
   if (!name) return showError('Enter your name.');
   if (!/^\S+@\S+\.\S+$/.test(email)) return showError('Enter a valid email address.');
 
+  const client = window.supabase;
+  if (!client || typeof client.auth?.signUp !== 'function') {
+    return showError('Supabase is still connecting or not initialized in core.js.');
+  }
+
+  const defaultPassword = 'CobraFXPassword123!';
+
   try {
-    // If supabase or window.supabase is available, try to use it
-    const client = window.supabase;
-    if (client && typeof client.auth?.signUp === 'function') {
-      const defaultPassword = 'CobraFXPassword123!';
-      
-      if (mode === 'signup') {
-        const { error } = await client.auth.signUp({
-          email: email,
-          password: defaultPassword,
-          options: { data: { full_name: name } }
-        });
-        if (error) {
-          // If user already registered, try signing them in instead
-          if (error.message.includes('already registered')) {
-            const { error: signInErr } = await client.auth.signInWithPassword({
-              email: email,
-              password: defaultPassword
-            });
-            if (signInErr) return showError(signInErr.message);
-          } else {
-            return showError(error.message);
-          }
+    if (mode === 'signup') {
+      const { data, error } = await client.auth.signUp({
+        email: email,
+        password: defaultPassword,
+        options: { data: { full_name: name } }
+      });
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          const { error: signInErr } = await client.auth.signInWithPassword({
+            email: email,
+            password: defaultPassword
+          });
+          if (signInErr) return showError(signInErr.message);
+        } else {
+          return showError(error.message);
         }
-      } else {
-        const { error } = await client.auth.signInWithPassword({
-          email: email,
-          password: defaultPassword
-        });
-        if (error) return showError(error.message);
       }
     } else {
-      console.warn('Supabase client not fully detected, proceeding in simulation mode.');
+      const { error } = await client.auth.signInWithPassword({
+        email: email,
+        password: defaultPassword
+      });
+      if (error) return showError(error.message);
     }
 
-    // Save user locally and move to platform
     try { localStorage.setItem('astrol-user', JSON.stringify({ name, email })); } catch (x) {}
     location.href = 'home.html';
   } catch (err) {
-    // Ultimate fallback so you are never stuck
-    try { localStorage.setItem('astrol-user', JSON.stringify({ name, email })); } catch (x) {}
-    location.href = 'home.html';
+    showError(err.message || 'Authentication failed.');
   }
 });
