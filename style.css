@@ -122,3 +122,50 @@ h2{font-size:22px;margin:26px 0 16px}h2:first-child{margin-top:4px}
 .nhead h2{margin:0;font-size:22px}.nhead span{font-size:22px;letter-spacing:2px}
 .nitem{position:relative;padding:16px 0;border-bottom:1px solid #f0f0f0}.nitem p{color:#6a6e78;font-size:15px}.nitem small{color:#8b8e96}
 .rd{position:absolute;right:4px;top:20px;width:8px;height:8px;border-radius:50%;background:var(--red)}
+/* ===== EXCHANGE PAGE (add at the very bottom of style.css) ===== */
+.ex-card{border:1px solid var(--line);border-radius:22px;padding:14px;background:#fff;overflow:hidden}
+.ex-chips,.ex-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.ex-chips::-webkit-scrollbar,.ex-tabs::-webkit-scrollbar{display:none}
+.ex-chip{padding:9px 16px;border:1px solid #d6d8de;border-radius:999px;font-size:15px;white-space:nowrap}
+.ex-chip.on{border-color:var(--ink);background:var(--card)}
+.ex-coin{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none}
+.ex-pair{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:14px;margin-top:12px;width:100%;text-align:left}
+.ex-pair b{display:block;font-size:17px}
+.ex-pair small{color:var(--muted);font-size:14px}
+.ex-pair .ic{margin-left:auto}
+.ex-bal{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px 12px 0 0;padding:12px;margin-top:14px;color:var(--muted);font-size:15px}
+.ex-bal .coin{width:24px;height:24px;font-size:10px}
+.ex-bal span:last-child{margin-left:auto;color:var(--ink)}
+.ex-amt{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:0 0 12px 12px;padding:8px 12px}
+.ex-amt.err{border-color:var(--bad)}
+.ex-amt label{font-size:12px;color:var(--muted);display:block}
+.ex-amt input{border:0;outline:0;font:inherit;font-size:18px;width:130px;background:none;color:var(--ink)}
+.ex-cur{background:var(--card);border-radius:999px;padding:9px 14px;font-size:15px}
+.ex-err{color:var(--bad);font-size:14px;margin:8px 0 0;min-height:20px}
+.ex-err a{color:inherit;text-decoration:underline}
+.ex-pct{display:flex;gap:8px;margin:12px 0}
+.ex-pct button{flex:1;padding:9px 0;border:1px solid #d6d8de;border-radius:999px;font-size:15px}
+.ex-buy{width:100%;padding:15px;border-radius:999px;background:#10c28b;color:#fff;font-weight:700;font-size:17px}
+.ex-adv{display:flex;align-items:center;justify-content:space-between;background:var(--card);margin:14px -14px -14px;padding:16px 14px;width:calc(100% + 28px);text-align:left}
+.ex-adv b{font-size:17px}
+.ex-adv small{display:block;color:var(--muted);font-size:15px;margin-top:2px}
+.ex-adv i{width:26px;height:26px;border-radius:50%;background:#000;color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px}
+.ex-promo{margin-top:16px;border-radius:16px;padding:18px;color:#fff;background:linear-gradient(135deg,#2a0f14,#0d0d10 70%)}
+.ex-promo b{display:block;margin-bottom:6px;font-size:17px}
+.ex-promo p{font-size:14px;color:#cfcfd6;line-height:1.45}
+.ex-promo .tag{position:static;display:inline-block;background:var(--red);border-radius:4px;font-size:9px;padding:2px 4px;margin-right:6px;vertical-align:middle}
+.ex-search{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:13px 14px;color:var(--muted)}
+.ex-search input{border:0;outline:0;background:none;font:inherit;flex:1;color:var(--ink)}
+.ex-tabs{margin:14px 0}
+.ex-head,.ex-row{display:grid;grid-template-columns:1.3fr 1fr 1fr;align-items:center}
+.ex-head{color:var(--muted);font-size:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.ex-head span:last-child,.ex-row .px{text-align:right}
+.ex-row{padding:14px 0;border-bottom:1px solid var(--line)}
+.ex-row .nm{display:flex;align-items:center;gap:10px}
+.ex-row .nm b{display:block;font-size:16px}
+.ex-row small{color:var(--muted);font-size:13px}
+.ex-row .px b{display:block;font-size:16px}
+.ex-row .px small.up{color:var(--green)}
+.ex-row .px small.dn{color:var(--bad)}
+.ex-row svg{width:80px;height:30px}
+.ex-more{display:block;margin:18px auto 0;font-size:15px}
