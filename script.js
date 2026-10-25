@@ -1,4 +1,9 @@
-const state = { mode: 'real', hidden: false, balance: { real: 0, demo: 10000 }, action: 'deposit' };
+// Link script.js directly to the global engine state S from core.js
+if (typeof S === 'undefined') {
+  var S = { mode: 'demo', bal: { real: 0, demo: 10000 }, pos: [], fav: [] };
+}
+const uiState = { hidden: false, action: 'deposit' };
+
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
