@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://rutjwvhdvxvqzsrehdkr.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
+const SUPABASE_ANON_KEY = 'Sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
 
 // Create the Supabase client once. The CDN script must load before this file.
 let sbClient = null;
@@ -32,7 +32,31 @@ const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelecto
 const fmt=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 let S;try{S=JSON.parse(localStorage.getItem('astrol'))}catch(e){}
 S=S||{mode:'demo',bal:{real:0,demo:10000},pos:[],fav:[]};
+S.cfd=S.cfd||{real:0,demo:0};S.exch=S.exch||{real:0,demo:0};
 const save=()=>{try{localStorage.setItem('astrol',JSON.stringify(S))}catch(e){}};
+
+// ---- Load balances from the Supabase "profiles" table (edit them there, site follows) ----
+async function loadProfile(){
+  try{
+    const c=window.sb;if(!c||!c.auth)return false;
+    const {data:{session}}=await c.auth.getSession();
+    if(!session)return false;
+    const {data,error}=await c.from('profiles').select('*').eq('id',session.user.id).maybeSingle();
+    if(error||!data)return false;
+    const n=v=>Number(v)||0;
+    S.bal.real=n(data.real_balance);S.bal.demo=n(data.demo_balance);
+    S.cfd.real=n(data.real_cfd);S.cfd.demo=n(data.demo_cfd);
+    S.exch.real=n(data.real_exchange);S.exch.demo=n(data.demo_exchange);
+    if(data.active_account_type==='real'||data.active_account_type==='demo')S.mode=data.active_account_type;
+    save();return true;
+  }catch(e){console.warn('Profile load skipped:',e&&e.message);return false}
+}
+async function pullProfile(){
+  const before=S.mode;
+  const ok=await loadProfile();
+  if(ok){if(S.mode!==before)renderHead();else renderBal();window.onProfile&&window.onProfile()}
+  return ok;
+}
 MK.forEach(m=>{let p=m.price;m.hist=[];for(let i=0;i<150;i++){m.hist.unshift(p);p/=1+(Math.random()-.5)*2*m.vol}});
 function toast(t){let e=$('#toast');if(!e){e=document.createElement('div');e.id='toast';document.body.append(e)}e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2200)}
 function settle(){const now=Date.now();let ch=false;
@@ -63,4 +87,6 @@ function spark(m){const h=m.hist.slice(-30),lo=Math.min(...h),hi=Math.max(...h),
 const chg=m=>(m.price/m.hist[m.hist.length-31]-1)*100;
 setInterval(()=>{MK.forEach(m=>{m.price*=1+(Math.random()-.5)*2*m.vol;m.hist.push(m.price);m.hist.shift()});
  if(settle())renderBal();window.onTick&&window.onTick()},1000);
-document.addEventListener('DOMContentLoaded',()=>{renderHead();renderNav(document.body.dataset.page);window.init&&window.init()});
+document.addEventListener('DOMContentLoaded',()=>{renderHead();renderNav(document.body.dataset.page);window.init&&window.init();pullProfile()});
+setInterval(pullProfile,15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)pullProfile()});
