@@ -23,12 +23,21 @@ async function syncProfile(fields) {
 }
 
 function renderBalance() {
-  const v = uiState.hidden ? '****' : fmt(S.bal[S.mode]);
-  $$('.bal').forEach(e => e.textContent = v);
+  const m = S.mode;
+  const total = S.bal[m] + S.cfd[m] + S.exch[m];
+  const show = n => uiState.hidden ? '****' : fmt(n);
+  // Page headers: each account page shows its own account; Home/Portfolio show the total
+  $$('.bal').forEach(e => {
+    const v = e.closest('#exchange') ? S.exch[m]
+            : e.closest('#cfds') ? S.cfd[m]
+            : e.closest('#options') ? S.bal[m]
+            : total;
+    e.textContent = show(v);
+  });
   $$('.bal-acc').forEach(e => {
     const t = e.dataset.type;
-    const share = t === 'options' ? S.bal[S.mode] : 0;
-    e.textContent = uiState.hidden ? '****' : fmt(share);
+    const v = t === 'options' ? S.bal[m] : t === 'cfd' ? S.cfd[m] : S.exch[m];
+    e.textContent = show(v);
   });
   $$('.toggle button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
   // Mode applies to the whole page: body class + labels
@@ -63,10 +72,11 @@ document.addEventListener('click', e => {
   S.mode = b.dataset.mode;
   save();
   renderBalance();
+  syncProfile({ active_account_type: S.mode });
   toast('Switched to ' + (S.mode === 'demo' ? 'Demo' : 'Real') + ' account');
 });
 $$('.eye').forEach(b => b.onclick = () => { uiState.hidden = !uiState.hidden; renderBalance(); });
-$$('.refresh').forEach(b => b.onclick = () => { renderBalance(); toast('Balance updated'); });
+$$('.refresh').forEach(b => b.onclick = async () => { await pullProfile(); renderBalance(); toast('Balance updated'); });
 $$('.open-deposit').forEach(b => b.onclick = () => openSheet('deposit'));
 $$('.open-withdraw').forEach(b => b.onclick = () => openSheet('withdraw'));
 $$('.open-transfer').forEach(b => b.onclick = () => openSheet('transfer'));
@@ -135,6 +145,7 @@ function tick() {
 buildMarkets();
 renderBalance();
 window.onTick = tick; // core.js calls this every second
+window.onProfile = renderBalance; // core.js calls this after loading balances from Supabase
 
 /* Home page extras */
 let au = {}; try { au = JSON.parse(localStorage.getItem('astrol-user')) || {}; } catch (e) {}
@@ -165,9 +176,11 @@ if ($('#mobcard .x')) $('#mobcard .x').onclick = () => $('#mobcard').remove();
 if ($('#closeAcc')) $('#closeAcc').onclick = () => {
   S.bal.demo = 10000;
   S.bal.real = 0;
+  S.cfd.demo = 0; S.cfd.real = 0;
+  S.exch.demo = 0; S.exch.real = 0;
   save();
   renderBalance();
-  syncProfile({ real_balance: 0, demo_balance: 10000 });
+  syncProfile({ real_balance: 0, demo_balance: 10000, real_cfd: 0, demo_cfd: 0, real_exchange: 0, demo_exchange: 0 });
   toast('Demo account reset');
 };
 $$('.eye').forEach(b => b.addEventListener('click', () => $$('.eye use').forEach(u => u.setAttribute('href', uiState.hidden ? '#i-eye-off' : '#i-eye'))));
