@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://rutjwvhdvxvqzsrehdkr.supabase.co';
-const SUPABASE_ANON_KEY = 'Sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
+const SUPABASE_ANON_KEY = 'sb_publishable_DqQDIe_ouatcErPlW3H7tw_lo6y3Vmi';
 
 // Create the Supabase client once. The CDN script must load before this file.
 let sbClient = null;
