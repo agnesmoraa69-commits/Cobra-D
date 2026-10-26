@@ -1,12 +1,26 @@
-// Link script.js directly to the global engine state S from core.js
-if (typeof S === 'undefined') {
-  var S = { mode: 'demo', bal: { real: 0, demo: 10000 }, pos: [], fav: [] };
+// script.js relies on core.js (loaded first) for: S, save, $, $$, fmt, toast, MK, chg.
+// Do NOT redeclare those here, or the browser throws "already declared" and the page breaks.
+// Visible warning (no console needed on a phone) if core.js is missing or old
+if (typeof S === 'undefined' || typeof save !== 'function' || typeof MK === 'undefined') {
+  document.body.insertAdjacentHTML('afterbegin',
+    '<div style="background:#c00;color:#fff;padding:12px;font:14px sans-serif;position:relative;z-index:9999">' +
+    'Setup error: core.js did not load. Replace home.html and core.js on GitHub, then refresh.</div>');
+  throw new Error('core.js missing');
 }
+
 const uiState = { hidden: false, action: 'deposit' };
 
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Save balances to the Supabase "profiles" table (skipped quietly if not signed in or table missing)
+async function syncProfile(fields) {
+  try {
+    const c = window.sb || window.supabase;
+    if (!c || !c.auth) return;
+    const { data: { session } } = await c.auth.getSession();
+    if (session) await c.from('profiles').update(fields).eq('id', session.user.id);
+  } catch (e) {
+    console.warn('Profile sync skipped:', e && e.message);
+  }
+}
 
 function renderBalance() {
   const v = uiState.hidden ? '****' : fmt(S.bal[S.mode]);
@@ -17,18 +31,17 @@ function renderBalance() {
     e.textContent = uiState.hidden ? '****' : fmt(share);
   });
   $$('.toggle button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+  // Mode applies to the whole page: body class + labels
+  document.body.classList.toggle('mode-real', S.mode === 'real');
+  document.body.classList.toggle('mode-demo', S.mode === 'demo');
+  const label = S.mode === 'demo' ? 'Demo' : 'Real';
+  $$('.upd').forEach(e => e.textContent = label + ' account \u00b7 updated just now');
 }
 
 function showTab(name) {
   $$('.view').forEach(v => v.classList.toggle('active', v.id === name));
   $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
   window.scrollTo(0, 0);
-}
-
-function toast(msg) {
-  const t = $('#toast'); if (!t) return;
-  t.textContent = msg; t.hidden = false;
-  clearTimeout(toast.id); toast.id = setTimeout(() => t.hidden = true, 2200);
 }
 
 function openSheet(action) {
@@ -43,7 +56,15 @@ function openSheet(action) {
 
 $$('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 $$('[data-go]').forEach(b => b.onclick = () => showTab(b.dataset.go));
-$$('.toggle button').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; save(); renderBalance(); });
+// One handler for every Real/Demo toggle (CFDs, Options, ...). Mode is shared site-wide via S.mode.
+document.addEventListener('click', e => {
+  const b = e.target.closest('.toggle button[data-mode]');
+  if (!b) return;
+  S.mode = b.dataset.mode;
+  save();
+  renderBalance();
+  toast('Switched to ' + (S.mode === 'demo' ? 'Demo' : 'Real') + ' account');
+});
 $$('.eye').forEach(b => b.onclick = () => { uiState.hidden = !uiState.hidden; renderBalance(); });
 $$('.refresh').forEach(b => b.onclick = () => { renderBalance(); toast('Balance updated'); });
 $$('.open-deposit').forEach(b => b.onclick = () => openSheet('deposit'));
@@ -68,22 +89,8 @@ if ($('#confirm')) {
       S.bal[S.mode] -= amt;
     }
 
-    if (typeof save === 'function') save();
-
-    // Update database in Supabase
-    if (typeof supabase !== 'undefined') {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const updateData = S.mode === 'real' 
-          ? { real_balance: S.bal.real } 
-          : { demo_balance: S.bal.demo };
-
-        await supabase
-          .from('profiles')
-          .update(updateData)
-          .eq('id', session.user.id);
-      }
-    }
+    save();
+    syncProfile(S.mode === 'real' ? { real_balance: S.bal.real } : { demo_balance: S.bal.demo });
 
     if ($('#sheet')) $('#sheet').hidden = true;
     renderBalance();
@@ -91,7 +98,7 @@ if ($('#confirm')) {
   };
 }
 
-/* Simulated markets - sync with core.js MK array */
+/* Simulated markets - uses the MK array from core.js */
 function buildMarkets() {
   const el = $('#markets');
   if (!el || typeof MK === 'undefined') return;
@@ -127,11 +134,11 @@ function tick() {
 
 buildMarkets();
 renderBalance();
-window.onTick = tick; // Connect ticker update hook from core.js
+window.onTick = tick; // core.js calls this every second
 
 /* Home page extras */
 let au = {}; try { au = JSON.parse(localStorage.getItem('astrol-user')) || {}; } catch (e) {}
-const uname = au.name || 'Astrol trader';
+const uname = au.name || 'COBRA trader';
 const ini = uname.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 ['#avatar', '#pav'].forEach(s => { const el = $(s); if (el) el.textContent = ini; });
 if ($('#pname')) $('#pname').textContent = uname;
@@ -155,18 +162,12 @@ if ($('.bell2')) $('.bell2').onclick = () => showTab('notifs');
 $$('.back').forEach(b => b.onclick = () => showTab('home'));
 if ($('#idpill')) $('#idpill').onclick = () => { try { navigator.clipboard.writeText('as01....7f2c'); } catch (e) {} toast('Account ID copied'); };
 if ($('#mobcard .x')) $('#mobcard .x').onclick = () => $('#mobcard').remove();
-if ($('#closeAcc')) $('#closeAcc').onclick = async () => {
+if ($('#closeAcc')) $('#closeAcc').onclick = () => {
   S.bal.demo = 10000;
   S.bal.real = 0;
-  if (typeof save === 'function') save();
+  save();
   renderBalance();
-  
-  if (typeof supabase !== 'undefined') {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await supabase.from('profiles').update({ real_balance: 0, demo_balance: 10000 }).eq('id', session.user.id);
-    }
-  }
+  syncProfile({ real_balance: 0, demo_balance: 10000 });
   toast('Demo account reset');
 };
 $$('.eye').forEach(b => b.addEventListener('click', () => $$('.eye use').forEach(u => u.setAttribute('href', uiState.hidden ? '#i-eye-off' : '#i-eye'))));
@@ -251,7 +252,7 @@ if ($('#hlp')) $('#hlp').onclick = () => $('#hl').scrollBy({ left: -260, behavio
     ['XRP/USDT',  '35.67M',  '1.2932',     1.76, '#111111', 'X', 4],
     ['TRX/USDT',  '22.35M',  '0.3288',    -0.21, '#e0243a', 'T', 5]
   ];
-  function spark(seed, up) {
+  function exSpark(seed, up) {
     let y = 18; const pts = [];
     for (let i = 0; i < 24; i++) {
       y += Math.sin(i * seed * 0.7) * 3 + (up ? -0.25 : 0.25);
@@ -269,7 +270,7 @@ if ($('#hlp')) $('#hlp').onclick = () => $('#hl').scrollBy({ left: -260, behavio
     x('#exList').innerHTML = rows.map(r => `
       <div class="ex-row">
         <div class="nm"><span class="ex-coin" style="background:${r[4]}">${r[5]}</span><div><b>${r[0]}</b><small>Vol ${r[1]}</small></div></div>
-        <div>${spark(r[6], r[3] > 0)}</div>
+        <div>${exSpark(r[6], r[3] > 0)}</div>
         <div class="px"><b>${r[2]}</b><small class="${r[3] > 0 ? 'up' : 'dn'}">${r[3] > 0 ? '+' : ''}${r[3].toFixed(2)}%</small></div>
       </div>`).join('') || '<p class="muted" style="text-align:center;padding:24px 0">No pairs found</p>';
   }
